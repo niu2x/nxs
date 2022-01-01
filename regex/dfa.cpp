@@ -1,4 +1,5 @@
 #include <nxs/regex/dfa.h>
+#include <nxs/regex/nfa.h>
 
 #include <algorithm>
 
@@ -40,7 +41,7 @@ dfa_t::state_t dfa_t::put(charcode_t c)
 
     auto iter2 = iter->second.actions.find(c);
     if (iter2 == iter->second.actions.end()) {
-        if (iter->second.def == nil) {
+        if (iter->second.def == nil_state) {
             if (debug_) {
                 printf("dfa:%p reject: no action\n", this);
             }
@@ -59,6 +60,29 @@ dfa_t::state_t dfa_t::put(charcode_t c)
     }
 
     return is_resolve ? RESOLVE : ACCEPT;
+}
+
+void dfa_t::to_nfa(nfa_t& out) const
+{
+    auto builer = nfa_t::builder_t();
+
+    builer.set_init_state(init_state_);
+
+    for (auto& ts : terminates_) {
+        builer.add_terminate_state(ts);
+    }
+
+    for (auto& iter : transition_) {
+        if (iter.second.def != nil_state) {
+            builer.add_def_action(iter.first, iter.second.def);
+        }
+
+        for (auto& iter2 : iter.second.actions) {
+            builer.add_action(iter.first, iter2.first, iter2.second);
+        }
+    }
+
+    out = builer.build();
 }
 
 } // namespace nxs::regex

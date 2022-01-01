@@ -3,15 +3,18 @@
 
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace nxs::regex {
+
+class nfa_t;
 
 class dfa_t {
 public:
     using charcode_t = uint32_t;
     using state_t = uint32_t;
 
-    static constexpr state_t nil = 0xFFFFFFFF;
+    static constexpr state_t nil_state = 0xFFFFFFFF;
 
     enum status_t {
         ACCEPT,
@@ -41,7 +44,7 @@ public:
 
         builder_t& add_terminate_state(state_t s)
         {
-            terminates.emplace_back(s);
+            terminates.emplace(s);
             return *this;
         }
 
@@ -49,7 +52,7 @@ public:
         {
             auto iter = transition.find(from);
             if (iter == transition.end()) {
-                transition[from] = { .def = nil };
+                transition[from] = { .def = nil_state };
                 iter = transition.find(from);
             }
             iter->second.actions[c] = to;
@@ -60,7 +63,7 @@ public:
         {
             auto iter = transition.find(from);
             if (iter == transition.end()) {
-                transition[from] = { .def = nil };
+                transition[from] = { .def = nil_state };
                 iter = transition.find(from);
             }
             iter->second.def = to;
@@ -72,11 +75,15 @@ public:
         friend class dfa_t;
 
     private:
-        std::vector<state_t> terminates;
+        std::unordered_set<state_t> terminates;
         transition_t transition;
         state_t init_state;
     };
 
+    dfa_t()
+    : dfa_t(builder_t().build())
+    {
+    }
     dfa_t(const builder_t&);
     ~dfa_t();
     dfa_t(const dfa_t&) = default;
@@ -92,8 +99,10 @@ public:
 
     bool resolve() const;
 
+    void to_nfa(nfa_t&) const;
+
 private:
-    std::vector<state_t> terminates_;
+    std::unordered_set<state_t> terminates_;
     transition_t transition_;
     state_t current_state_;
     state_t init_state_;
