@@ -1,3 +1,3 @@
 # nxs 
 
-niu2x's script language.
+niu2x's compiler tools set.
