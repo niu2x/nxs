@@ -1,1 +1,3 @@
-#nxs -- niu2x's script language.
+#nxs 
+
+niu2x's script language.
