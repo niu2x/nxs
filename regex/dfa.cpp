@@ -2,6 +2,15 @@
 #include <nxs/regex/nfa.h>
 
 #include <algorithm>
+#include <string>
+#include <codecvt>
+#include <locale>
+
+static std::string To_UTF8(const std::u32string& s)
+{
+    std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
+    return conv.to_bytes(s);
+}
 
 namespace nxs::regex {
 
@@ -83,6 +92,39 @@ void dfa_t::to_nfa(nfa_t& out) const
     }
 
     out = builer.build();
+}
+
+void dfa_t::dot(std::ostream& os) const
+{
+    os << "digraph { ";
+
+    char32_t csz[] = { 'A', '\0' };
+    std::u32string sz(csz);
+
+    for (auto& iter : transition_) {
+        for (auto& iter2 : iter.second.actions) {
+            os << iter.first;
+            os << " -> ";
+            os << iter2.second;
+            sz[0] = iter2.first;
+            os << " [ label = \"" << To_UTF8(sz) << "\" ];";
+        }
+
+        if (iter.second.def != nil_state) {
+            os << iter.first;
+            os << " -> ";
+            os << iter.second.def;
+            os << " [ label = \"*\" ];";
+        }
+    }
+
+    for (auto it : terminates_) {
+        os << it << " [ shape = doublecircle ]; ";
+    }
+
+    os << init_state_ << "[ shape = box ]; ";
+
+    os << "}";
 }
 
 } // namespace nxs::regex

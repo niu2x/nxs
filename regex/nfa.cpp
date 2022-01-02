@@ -3,6 +3,14 @@
 #include <algorithm>
 #include <set>
 #include <iostream>
+#include <codecvt>
+#include <locale>
+
+static std::string To_UTF8(const std::u32string& s)
+{
+    std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
+    return conv.to_bytes(s);
+}
 
 namespace nxs::regex {
 
@@ -72,8 +80,8 @@ void nfa_t::to_dfa(dfa_t& out) const
     while (!works.empty()) {
         current_states = *works.begin();
 
-        for(auto ssss : current_states)
-        	std::cout << ssss << "," ;
+        // for (auto ssss : current_states)
+        //     std::cout << ssss << ",";
         std::cout << std::endl;
 
         works.erase(works.begin());
@@ -94,20 +102,21 @@ void nfa_t::to_dfa(dfa_t& out) const
 
         {
             auto new_state = continues_states(next_def_state(current_states));
-            if(new_state.size() > 0){
-	            builder.add_def_action(sf.get(current_states), sf.get(new_state));
-	            if (std::find(visited.begin(), visited.end(), new_state)
-	                == visited.end()) {
-	                works.emplace(new_state);
-	            }
+            if (new_state.size() > 0) {
+                builder.add_def_action(
+                    sf.get(current_states), sf.get(new_state));
+                if (std::find(visited.begin(), visited.end(), new_state)
+                    == visited.end()) {
+                    works.emplace(new_state);
+                }
             }
         }
 
-        for(auto st : current_states) {
-        	if(is_terminate_state(st)){
-        		builder.add_terminate_state(sf.get(current_states));
-        		break;
-        	}
+        for (auto st : current_states) {
+            if (is_terminate_state(st)) {
+                builder.add_terminate_state(sf.get(current_states));
+                break;
+            }
         }
     }
 
@@ -171,13 +180,14 @@ std::unordered_set<nfa_t::charcode_t> nfa_t::all_acceptable_chars(
     return chars;
 }
 
-std::unordered_set<nfa_t::state_t> nfa_t::continues_states(const std::unordered_set<state_t> & sts) const {
-	std::unordered_set<nfa_t::charcode_t> chars;
+std::unordered_set<nfa_t::state_t> nfa_t::continues_states(
+    const std::unordered_set<state_t>& sts) const
+{
+    std::unordered_set<nfa_t::charcode_t> chars;
     for (auto& st : sts)
         chars.merge(continues_states(st));
     return chars;
 }
-
 
 std::unordered_set<nfa_t::state_t> nfa_t::continues_states(state_t s) const
 {
@@ -203,6 +213,41 @@ nfa_t::state_transition_t nfa_t::state_transition(state_t s) const
         return iter->second;
     }
     return {};
+}
+
+void nfa_t::dot(std::ostream& os) const
+{
+    os << "digraph { ";
+
+    char32_t csz[] = { 'A', '\0' };
+    std::u32string sz(csz);
+
+    for (auto& iter : transition_) {
+        for (auto& iter2 : iter.second.actions) {
+            for (auto& it : iter2.second) {
+                os << iter.first;
+                os << " -> ";
+                os << it;
+                sz[0] = iter2.first;
+                os << " [ label = \"" << To_UTF8(sz) << "\" ];";
+            }
+        }
+
+        for (auto& it : iter.second.def) {
+            os << iter.first;
+            os << " -> ";
+            os << it;
+            os << " [ label = \"*\" ];";
+        }
+    }
+
+    for (auto it : terminates_) {
+        os << it << " [ shape = doublecircle ]; ";
+    }
+
+    os << init_state_ << "[ shape = box ]; ";
+
+    os << "}";
 }
 
 } // namespace nxs::regex

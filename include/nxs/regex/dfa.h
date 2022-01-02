@@ -101,6 +101,8 @@ public:
 
     void to_nfa(nfa_t&) const;
 
+    void dot(std::ostream& os) const;
+
 private:
     std::unordered_set<state_t> terminates_;
     transition_t transition_;

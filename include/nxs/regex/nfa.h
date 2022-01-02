@@ -102,7 +102,8 @@ public:
     void to_dfa(dfa_t&) const;
 
     std::unordered_set<state_t> continues_states(state_t s) const;
-    std::unordered_set<state_t> continues_states(const std::unordered_set<state_t> & sts) const;
+    std::unordered_set<state_t> continues_states(
+        const std::unordered_set<state_t>& sts) const;
     std::unordered_set<state_t> all_states() const;
 
     state_transition_t state_transition(state_t s) const;
@@ -122,6 +123,8 @@ public:
     std::unordered_set<state_t> next_def_state(
         const std::unordered_set<state_t>& sts) const;
     std::unordered_set<state_t> next_def_state(state_t st) const;
+
+    void dot(std::ostream& os) const;
 
 private:
     class state_factory_t {
