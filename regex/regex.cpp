@@ -35,6 +35,12 @@ static bool readchar(std::u32string& sz, char32_t& c, bool& plain)
             return false;
         c = sz[0];
         sz = sz.substr(1);
+        if (c == 't')
+            c = '\t';
+        if (c == 'n')
+            c = '\n';
+        if (c == 'r')
+            c = '\r';
     }
 
     return true;
@@ -57,9 +63,9 @@ bool parse(const std::string& sz, dfa_t* out)
         static nfa_t eval(const nfa_t& a, const nfa_t& b, int op)
         {
             if (op == concat)
-                return a * b;
+                return to_nfa(to_dfa(a * b));
             if (op == logic_or)
-                return a + b;
+                return to_nfa(to_dfa(a + b));
             assert(false);
         }
     };
@@ -138,6 +144,57 @@ bool parse(const std::string& sz, dfa_t* out)
                 case ')': {
                     auto exp = vm.pop_level();
                     vm.push(exp);
+                    break;
+                }
+
+                case '[': {
+
+                    vm.push_level(nfa_t::builder_t().set_init_state(1).build());
+
+                    do {
+
+                        bool success = readchar(u32, chr, plain);
+                        if (!success)
+                            return false;
+
+                        if (plain) {
+
+                            if (u32.size() > 1 && u32[0] == '-') {
+                                auto a = chr;
+
+                                success = readchar(u32, chr, plain);
+                                if (!success)
+                                    return false;
+
+                                success = readchar(u32, chr, plain);
+                                if (!success)
+                                    return false;
+
+                                if (!plain)
+                                    return false;
+
+                                for (char32_t c = a; c <= chr; c++) {
+                                    auto builder = nfa_t::builder_t();
+                                    builder.set_init_state(1);
+                                    builder.add_action(1, c, 2);
+                                    builder.add_terminate_state(2);
+                                    vm.push(logic_or, builder.build());
+                                }
+
+                            } else {
+                                auto builder = nfa_t::builder_t();
+                                builder.set_init_state(1);
+                                builder.add_action(1, chr, 2);
+                                builder.add_terminate_state(2);
+                                vm.push(logic_or, builder.build());
+                            }
+
+                        } else {
+                        }
+                    } while (!((!plain) && chr == ']'));
+
+                    vm.push(vm.pop_level());
+
                     break;
                 }
 

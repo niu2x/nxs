@@ -103,7 +103,17 @@ public:
 
     void dot(std::ostream& os) const;
 
+    dfa_t optimize() const;
+
 private:
+    dfa_t merge_state(state_t a, state_t b) const;
+
+    bool is_terminate_state(state_t st) const;
+    state_transition_t state_transition(state_t s) const;
+
+    bool mergeable(state_t a, state_t b) const;
+    state_t state_action(const state_transition_t& st, charcode_t c) const;
+
     std::unordered_set<state_t> terminates_;
     transition_t transition_;
     state_t current_state_;

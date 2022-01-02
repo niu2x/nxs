@@ -8,6 +8,8 @@ int main()
     nxs::regex::dfa_t dfa;
     auto success = nxs::regex::parse(ss, &dfa);
     if (success) {
+        // dfa.set_debug(true);
+        dfa = dfa.optimize();
         dfa.dot(std::cout);
     } else {
         std::cerr << "error" << std::endl;
