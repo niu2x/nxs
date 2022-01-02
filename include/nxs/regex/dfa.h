@@ -81,7 +81,7 @@ public:
     };
 
     dfa_t()
-    : dfa_t(builder_t().build())
+    : dfa_t(builder_t().set_init_state(1).add_terminate_state(1).build())
     {
     }
     dfa_t(const builder_t&);

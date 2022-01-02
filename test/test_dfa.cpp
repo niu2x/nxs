@@ -73,10 +73,10 @@ int main()
     //         .add_terminate_state(2)
     //         .build();
 
-    auto nfa = nfa1 * nfa2;
+    // auto nfa = nfa1 * nfa2;
     // nfa.dot(std::cout);
 
-    auto dfa = nxs::regex::to_dfa(nfa);
+    nxs::regex::dfa_t dfa;
     dfa.dot(std::cout);
 
     // dfa.set_debug(true);

@@ -1,16 +1,9 @@
 #include <nxs/regex/dfa.h>
 #include <nxs/regex/nfa.h>
 
-#include <algorithm>
-#include <string>
-#include <codecvt>
-#include <locale>
+#include "utils.h"
 
-static std::string To_UTF8(const std::u32string& s)
-{
-    std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
-    return conv.to_bytes(s);
-}
+#include <algorithm>
 
 namespace nxs::regex {
 
@@ -122,7 +115,9 @@ void dfa_t::dot(std::ostream& os) const
         os << it << " [ shape = doublecircle ]; ";
     }
 
-    os << init_state_ << "[ shape = box ]; ";
+    os << "start";
+    os << " -> ";
+    os << init_state_;
 
     os << "}";
 }

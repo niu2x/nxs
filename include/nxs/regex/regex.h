@@ -20,6 +20,8 @@ inline nfa_t to_nfa(const dfa_t& dfa)
     return nfa;
 }
 
+bool parse(const std::string& sz, dfa_t*);
+
 } // namespace nxs::regex
 
 #endif

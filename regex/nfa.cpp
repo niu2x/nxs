@@ -3,14 +3,8 @@
 #include <algorithm>
 #include <set>
 #include <iostream>
-#include <codecvt>
-#include <locale>
 
-static std::string To_UTF8(const std::u32string& s)
-{
-    std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
-    return conv.to_bytes(s);
-}
+#include "utils.h"
 
 namespace nxs::regex {
 
@@ -41,11 +35,11 @@ bool nfa_t::is_terminate_state(state_t st) const
 static bool compartor(
     std::unordered_set<nfa_t::state_t> a, std::unordered_set<nfa_t::state_t> b)
 {
-    if (a.size() > b.size())
-        return false;
+    // if (a.size() > b.size())
+    //     return false;
 
-    if (a.size() < b.size())
-        return true;
+    // if (a.size() < b.size())
+    //     return true;
 
     std::vector<nfa_t::state_t> aa;
     std::vector<nfa_t::state_t> bb;
@@ -80,9 +74,11 @@ void nfa_t::to_dfa(dfa_t& out) const
     while (!works.empty()) {
         current_states = *works.begin();
 
+        sf.get(current_states);
+
         // for (auto ssss : current_states)
-        // std::cout << ssss << ",";
-        // std::cout << std::endl;
+        //     std::cout << ssss << ",";
+        // std::cout << ": " << sf.get(current_states) << std::endl;
 
         works.erase(works.begin());
         visited.emplace(current_states);
@@ -98,6 +94,28 @@ void nfa_t::to_dfa(dfa_t& out) const
             if (std::find(visited.begin(), visited.end(), new_state)
                 == visited.end()) {
                 works.emplace(new_state);
+                // std::cout << " not found : " << sf.get(new_state) <<
+                // std::endl;
+            } else {
+                auto kk = std::find(visited.begin(), visited.end(), new_state);
+
+                // std::cout << "found : " << sf.get(new_state) << " "
+                //           << sf.get(*kk) << " " << (*kk == new_state)
+                //           << std::endl;
+
+                // if ((*kk == new_state)) {
+                //     std::cout << "kk\n";
+                //     for (auto i : *kk)
+                //         std::cout << i << ',';
+                //     std::cout << "\n";
+
+                //     std::cout << "new_state\n";
+                //     for (auto i : new_state)
+                //         std::cout << i << ',';
+                //     std::cout << "\n";
+                // }
+
+                // std::cout << "\n";
             }
         }
 
@@ -110,6 +128,29 @@ void nfa_t::to_dfa(dfa_t& out) const
                 if (std::find(visited.begin(), visited.end(), new_state)
                     == visited.end()) {
                     works.emplace(new_state);
+                    // std::cout << " not found : " << sf.get(new_state)
+                    //           << std::endl;
+                } else {
+                    auto kk
+                        = std::find(visited.begin(), visited.end(), new_state);
+
+                    // std::cout << "found : " << sf.get(new_state) << " "
+                    //           << sf.get(*kk) << " " << (*kk == new_state)
+                    //           << std::endl;
+
+                    // if ((*kk == new_state)) {
+                    //     std::cout << "kk\n";
+                    //     for (auto i : *kk)
+                    //         std::cout << i << ',';
+                    //     std::cout << "\n";
+
+                    //     std::cout << "new_state\n";
+                    //     for (auto i : new_state)
+                    //         std::cout << i << ',';
+                    //     std::cout << "\n";
+                    // }
+
+                    // std::cout << "\n";
                 }
             }
         }
@@ -266,7 +307,11 @@ void nfa_t::dot(std::ostream& os) const
         os << it << " [ shape = doublecircle ]; ";
     }
 
-    os << init_state_ << "[ shape = box ]; ";
+    // os << init_state_ << "[ shape = box ]; ";
+
+    os << "start";
+    os << " -> ";
+    os << init_state_;
 
     os << "}";
 }
@@ -399,6 +444,121 @@ nfa_t nfa_t::operator*(const nfa_t& other) const
     }
 
     return builder.build();
+}
+
+nfa_t nfa_t::repeat_zero_or_more() const
+{
+
+    auto builder = builder_t();
+
+    builder.set_init_state(0);
+
+    state_t state_offset = 1;
+    state_t max_state = 1;
+
+    for (auto& iter : this->transition_) {
+        for (auto& iter2 : iter.second.actions) {
+            for (auto& it : iter2.second) {
+                builder.add_action(
+                    iter.first + state_offset, iter2.first, it + state_offset);
+                max_state = std::max(max_state, iter.first);
+                max_state = std::max(max_state, it);
+            }
+        }
+
+        for (auto& it : iter.second.def) {
+            builder.add_def_action(
+                iter.first + state_offset, it + state_offset);
+            max_state = std::max(max_state, it);
+        }
+    }
+
+    for (auto it : this->terminates_) {
+        builder.add_terminate_state(it + state_offset);
+        max_state = std::max(max_state, it);
+    }
+
+    for (auto it : this->terminates_) {
+        builder.add_action(
+            it + state_offset, nil_char, max_state + state_offset + 1);
+    }
+
+    builder.add_action(0, nil_char, this->init_state_ + state_offset);
+    builder.add_action(0, nil_char, max_state + state_offset + 1);
+    builder.add_action(max_state + state_offset + 1, nil_char, 0);
+    builder.add_terminate_state(max_state + state_offset + 1);
+
+    return builder.build();
+}
+
+nfa_t nfa_t::repeat_one_or_more() const
+{
+
+    auto builder = builder_t();
+
+    builder.set_init_state(0);
+
+    state_t state_offset = 1;
+    state_t max_state = 1;
+
+    for (auto& iter : this->transition_) {
+        for (auto& iter2 : iter.second.actions) {
+            for (auto& it : iter2.second) {
+                builder.add_action(
+                    iter.first + state_offset, iter2.first, it + state_offset);
+                max_state = std::max(max_state, iter.first);
+                max_state = std::max(max_state, it);
+            }
+        }
+
+        for (auto& it : iter.second.def) {
+            builder.add_def_action(
+                iter.first + state_offset, it + state_offset);
+            max_state = std::max(max_state, it);
+        }
+    }
+
+    for (auto it : this->terminates_) {
+        builder.add_terminate_state(it + state_offset);
+        max_state = std::max(max_state, it);
+    }
+
+    for (auto it : this->terminates_) {
+        builder.add_action(
+            it + state_offset, nil_char, max_state + state_offset + 1);
+    }
+
+    builder.add_action(0, nil_char, this->init_state_ + state_offset);
+    builder.add_action(max_state + state_offset + 1, nil_char, 0);
+    builder.add_terminate_state(max_state + state_offset + 1);
+
+    return builder.build();
+}
+
+nfa_t nfa_t::repeat(int n) const
+{
+
+    if (n == 0) {
+        return builder_t().set_init_state(1).add_terminate_state(1).build();
+    }
+
+    if (n == 1)
+        return *this;
+
+    return (*this) * repeat(n - 1);
+}
+
+nfa_t nfa_t::repeat(int start, int end) const
+{
+    std::vector<nfa_t> list;
+    for (auto i = start; i < end; i++) {
+        list.push_back(repeat(i));
+    }
+
+    auto k = list[0];
+    for (int i = 1; i < list.size(); i++)
+        k = k + list[i];
+    return k;
 }
 
 } // namespace nxs::regex

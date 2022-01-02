@@ -6,6 +6,7 @@
 #include <unordered_set>
 #include <map>
 #include <sstream>
+#include <algorithm>
 
 #include <nxs/regex/dfa.h>
 
@@ -91,7 +92,7 @@ public:
     };
 
     nfa_t()
-    : nfa_t(builder_t().build())
+    : nfa_t(builder_t().set_init_state(1).add_terminate_state(1).build())
     {
     }
     nfa_t(const builder_t&);
@@ -129,6 +130,10 @@ public:
 
     nfa_t operator+(const nfa_t& other) const;
     nfa_t operator*(const nfa_t& other) const;
+    nfa_t repeat_zero_or_more() const;
+    nfa_t repeat_one_or_more() const;
+    nfa_t repeat(int n) const;
+    nfa_t repeat(int start, int end) const;
 
 private:
     class state_factory_t {
@@ -138,8 +143,15 @@ private:
 
         state_t get(const std::unordered_set<state_t>& states)
         {
+            std::vector<state_t> aa;
+
+            for (auto it : states)
+                aa.push_back(it);
+
+            std::sort(aa.begin(), aa.end());
+
             std::stringstream ss;
-            for (auto& s : states)
+            for (auto& s : aa)
                 ss << s << "-";
             auto key = ss.str();
             if (store_.find(key) == store_.end()) {
