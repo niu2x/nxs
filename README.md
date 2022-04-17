@@ -1,3 +1,11 @@
-# nxs 
+# NXS 
+niu2x's script language
 
-niu2x's compiler tools set.
+# Examples
+````
+print("hello world!")
+````
+
+# token
+
+# grammer
