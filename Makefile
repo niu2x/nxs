@@ -1,7 +1,7 @@
-all: nxs
+all: all_nxs
 
-nxs:
-	$(MAKE) -C src/nxs nxs
+all_nxs:
+	$(MAKE) -C src/nxs nxsc
 
 clean: 
 	$(MAKE) -C src/nxs clean

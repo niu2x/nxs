@@ -5,14 +5,6 @@
 #define ALLOC(type) (type*)malloc(sizeof(type))
 #define FREE(ptr)   free(ptr)
 
-DEF_DESTROY(block)
-{
-    if (!self)
-        return;
-    destroy_statlist(self->statlist);
-    FREE(self);
-}
-
 DEF_DESTROY(statlist)
 {
     if (!self)
@@ -30,11 +22,34 @@ DEF_DESTROY(stat)
     FREE(self);
 }
 
+module_t* create_module(block_t* block)
+{
+    module_t* self = ALLOC(module_t);
+    self->block = block;
+    return self;
+}
+
+DEF_DESTROY(module)
+{
+    if (!self)
+        return;
+    destroy_block(self->block);
+    FREE(self);
+}
+
 block_t* create_block(statlist_t* statlist)
 {
     block_t* self = ALLOC(block_t);
     self->statlist = statlist;
     return self;
+}
+
+DEF_DESTROY(block)
+{
+    if (!self)
+        return;
+    destroy_statlist(self->statlist);
+    FREE(self);
 }
 
 statlist_t* create_statlist(statlist_t* statlist, stat_t* stat)

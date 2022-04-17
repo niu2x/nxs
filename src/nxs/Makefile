@@ -1,11 +1,11 @@
-CXX_sources := main.cpp 
+CXX_sources := nxsc.cpp codegen.cpp
 C_sources := grammer.tab.c token.yy.c ast.c
 
-CXXFLAGS += -std=c++17
-LDFLAGS += -lniu2x
+# CXXFLAGS += $(shell llvm-config --cxxflags)
+LDFLAGS += $(shell llvm-config --ldflags --system-libs --libs core)
 CPPFLAGS += -g
 
-nxs: $(CXX_sources:.cpp=.o) $(C_sources:.c=.o)
+nxsc: $(CXX_sources:.cpp=.o) $(C_sources:.c=.o)
 	$(CXX) $^ -o $@ $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS) 
 
 %.d: %.c

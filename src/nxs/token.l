@@ -89,8 +89,17 @@ static void buffer_push(struct buffer_t *buffer, char c) {
 				c = input();
 				if(!c)
 					state = 1;
-				else{
+				else if(c == 'n') {
+					buffer_push(&sb, '\n');
+					state = 0;
+				}
+				else if(c == 't') {
+					buffer_push(&sb, '\t');
+					state = 0;
+				}
+				else {
 					buffer_push(&sb, c);
+					state = 0;
 				}
 				break;
 			}
@@ -113,7 +122,7 @@ static void buffer_push(struct buffer_t *buffer, char c) {
 \n {}
 " " {}
 
-. {yyerror("unexpected: %s line: %d\n", yytext, yylineno);}
+. {yyerror("unexpected: %s line: %d\n", yytext, yylineno); yyterminate();}
 
 <<EOF>> {yyterminate();}
 
@@ -130,19 +139,19 @@ int yyerror(char *message, ...) {
 	return n;
 } 
 
-block_t *root_block = 0;
+module_t *root_module = 0;
 
-block_t *nxs_parse(char *sz) {
+module_t *nxs_parse(char *sz) {
 	yylineno = 1;
-	root_block = 0;
+	root_module = 0;
 	had_error = 0;
 	YY_BUFFER_STATE bs = yy_scan_string(sz);
 	yyparse();
 	yy_delete_buffer(bs);
 
 	if(had_error){
-		destroy_block(root_block);
-		root_block = 0;
+		destroy_module(root_module);
+		root_module = 0;
 	}
-	return root_block;
+	return root_module;
 }

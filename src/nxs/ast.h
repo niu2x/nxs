@@ -9,7 +9,9 @@ enum {
     stat_type_print = 1,
 };
 
-struct block_t;
+typedef struct module_t {
+    AST_FIELD(block)
+} module_t;
 
 typedef struct block_t {
     AST_FIELD(statlist)
@@ -28,6 +30,7 @@ typedef struct stat_t {
     };
 } stat_t;
 
+module_t* create_module(block_t*);
 block_t* create_block(statlist_t*);
 statlist_t* create_statlist(statlist_t*, stat_t*);
 
@@ -35,8 +38,9 @@ stat_t* create_stat_print(char*);
 
 DEF_DESTROY(block);
 DEF_DESTROY(stat);
+DEF_DESTROY(module);
 DEF_DESTROY(statlist);
 
-block_t* nxs_parse(char*);
+module_t* nxs_parse(char*);
 
 #endif

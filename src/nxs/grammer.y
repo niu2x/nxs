@@ -7,7 +7,7 @@
 #include "nxs.h"
 #include "ast.h"
 
-extern block_t *root_block;
+extern module_t *root_module;
 
 %}
 
@@ -17,19 +17,22 @@ extern block_t *root_block;
 	struct stat_t *stat;
 	struct statlist_t *statlist;
 	struct block_t *block;
+	struct module_t *module;
 	char *sz;
 }
 
 %nterm <stat> stat
 %nterm <statlist> statlist
 %nterm <block> block
+%nterm <module> module
 
 %%
-block: statlist { $$ = create_block($1); root_block = $$;}
+module: block { $$ = create_module($1); root_module = $$;}
+block: statlist { $$ = create_block($1);}
 
 statlist: statlist T_SEMICOLON stat { $$ = create_statlist($1, $3);}
 	| statlist stat { $$ = create_statlist($1, $2);}
-	| stat { $$ = create_statlist(0, $1);}
+	| { $$ = create_statlist(0, 0);}
 
 stat: T_PRINT T_STRING { $$ = create_stat_print($2);}
 
