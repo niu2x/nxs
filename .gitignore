@@ -1,2 +1,8 @@
 build
 doc
+*.d
+src/nxs/nxs
+*.tab.c
+*.tab.h
+*.yy.c
+*.o
