@@ -1,11 +1,6 @@
 # NXS 
 niu2x's script language
 
-# Examples
-````
-print("hello world!")
-````
-
-# token
-
-# grammer
+# Features
+- thread
+- a file is only a thing (class/type/...)

@@ -1,3 +1,6 @@
-print "hello world\n"
-print "hello, world\n"
-print "hello, niu2x\n"
+import lib.F
+
+static main -> int 
+{
+	
+}
