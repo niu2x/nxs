@@ -53,4 +53,9 @@ void buffer_append(struct buffer_t* self, char c)
 
 int buffer_atoi(struct buffer_t* self) { return atoi(self->base, self->size); }
 
+double buffer_to_double(struct buffer_t* self)
+{
+    return stod(self->base, self->size);
+}
+
 } // namespace niu2x::nxs

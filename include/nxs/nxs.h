@@ -18,12 +18,16 @@ enum {
     TK_UNKNOWN,
 };
 
+const char* token_name(int tk);
+
 struct token_t {
     int type;
     union {
-        int integer;
+        int i;
+        double d;
     } value;
 };
+void token_value_snprintf(char* buf, int size, struct token_t* tk);
 
 struct stream_t;
 
@@ -55,6 +59,7 @@ const extern char* empty_str;
 void buffer_append(struct buffer_t* self, char c);
 void buffer_free(struct buffer_t* self);
 int buffer_atoi(struct buffer_t* self);
+double buffer_to_double(struct buffer_t* self);
 
 #define NXS_CAPACITY_EXPAND(capacity, delta) ((capacity) + (delta)) * 3 / 2
 #define NXS_CHECK_RESULT(exp, message)                                         \
@@ -64,6 +69,7 @@ int buffer_atoi(struct buffer_t* self);
     }
 
 int atoi(const char* base, int size);
+double stod(const char* base, int size);
 
 }; // namespace niu2x::nxs
 
