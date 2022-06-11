@@ -29,6 +29,8 @@ static void lexer_context_free(struct lexer_context_t* self)
     buffer_free(&self->buffer);
 }
 
+static bool valid_for_id(int c) { return isdigit(c) || isalpha(c) || c == '_'; }
+
 struct token_t lexer(struct stream_t* stream)
 {
     lexer_context_t lexer_context = { stream, NXS_BUFFER_INIT, EOF };
@@ -38,51 +40,50 @@ struct token_t lexer(struct stream_t* stream)
     lexer_context_getchar(&lexer_context);
 
     while (result.type == TK_UNKNOWN) {
-        switch (lexer_context.peek) {
-            case EOF: {
-                result.type = TK_EOF;
-                lexer_context_getchar(&lexer_context);
-                break;
-            }
 
-            case '0':
-            case '1':
-            case '2':
-            case '3':
-            case '4':
-            case '5':
-            case '6':
-            case '7':
-            case '8':
-            case '9': {
+        if (lexer_context.peek == EOF) {
+            result.type = TK_EOF;
+            lexer_context_getchar(&lexer_context);
+        }
+
+        else if (isdigit(lexer_context.peek)) {
+            do {
+                lexer_context_getchar(&lexer_context);
+            } while (isdigit(lexer_context.peek));
+
+            if (lexer_context.peek == '.') {
                 do {
                     lexer_context_getchar(&lexer_context);
                 } while (isdigit(lexer_context.peek));
-
-                if (lexer_context.peek == '.') {
-                    do {
-                        lexer_context_getchar(&lexer_context);
-                    } while (isdigit(lexer_context.peek));
-                    result.type = TK_DOUBLE;
-                    result.value.d = buffer_to_double(&lexer_context.buffer);
-                } else {
-                    result.type = TK_INTEGER;
-                    result.value.i = buffer_atoi(&lexer_context.buffer);
-                }
-                break;
+                result.type = TK_DOUBLE;
+                result.value.d = buffer_to_double(&lexer_context.buffer);
+            } else {
+                result.type = TK_INTEGER;
+                result.value.i = buffer_to_integer(&lexer_context.buffer);
             }
-            case '\n':
-            case '\r':
-            case '\t':
-            case ' ':
-                lexer_context_skipchar(&lexer_context);
-                break;
+        } else if (isspace(lexer_context.peek)) {
+            lexer_context_skipchar(&lexer_context);
+        }
 
-            default: {
-                result.type = lexer_context.peek;
+        else if (isalpha(lexer_context.peek)) {
+            do {
                 lexer_context_getchar(&lexer_context);
-                break;
+            } while (valid_for_id(lexer_context.peek));
+
+            result.type = TK_ID;
+            result.value.s = buffer_to_string(&lexer_context.buffer);
+
+            if (!strcmp(result.value.s, "import")) {
+                result.type = TK_IMPORT;
+            } else if (!strcmp(result.value.s, "function")) {
+                result.type = TK_FUNCTION;
             }
+
+        }
+
+        else {
+            result.type = lexer_context.peek;
+            lexer_context_getchar(&lexer_context);
         }
     }
 
@@ -118,12 +119,13 @@ const char* token_name(int k)
 #undef CASE
 }
 
-void token_value_snprintf(char* buf, int size, struct token_t* tk)
+void token_value_snprintf(struct token_t* tk, char* buf, int size)
 {
     if (size > 0)
         buf[0] = 0;
     switch (tk->type) {
         case TK_ID:
+            snprintf(buf, size, "%s", tk->value.s);
             break;
         case TK_IMPORT:
             break;
@@ -142,6 +144,16 @@ void token_value_snprintf(char* buf, int size, struct token_t* tk)
         case TK_UNKNOWN:
             break;
         default: {
+            break;
+        }
+    }
+}
+
+void token_free(struct token_t* tk)
+{
+    switch (tk->type) {
+        case TK_ID: {
+            free(tk->value.s);
             break;
         }
     }

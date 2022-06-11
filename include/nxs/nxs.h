@@ -25,9 +25,11 @@ struct token_t {
     union {
         int i;
         double d;
+        char* s;
     } value;
 };
-void token_value_snprintf(char* buf, int size, struct token_t* tk);
+void token_value_snprintf(struct token_t* tk, char* buf, int size);
+void token_free(struct token_t* tk);
 
 struct stream_t;
 
@@ -58,8 +60,9 @@ const extern char* empty_str;
 
 void buffer_append(struct buffer_t* self, char c);
 void buffer_free(struct buffer_t* self);
-int buffer_atoi(struct buffer_t* self);
+int buffer_to_integer(struct buffer_t* self);
 double buffer_to_double(struct buffer_t* self);
+char* buffer_to_string(struct buffer_t* self);
 
 #define NXS_CAPACITY_EXPAND(capacity, delta) ((capacity) + (delta)) * 3 / 2
 #define NXS_CHECK_RESULT(exp, message)                                         \

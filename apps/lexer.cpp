@@ -41,8 +41,10 @@ int main()
         token = nxs::lexer(&stream);
         printf("type: %s ", nxs::token_name(token.type));
 
-        nxs::token_value_snprintf(buf, 256, &token);
+        nxs::token_value_snprintf(&token, buf, 256);
         printf("%s\n", buf);
+
+        nxs::token_free(&token);
 
     } while (token.type != nxs::TK_EOF);
     return 0;

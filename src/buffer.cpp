@@ -51,7 +51,14 @@ void buffer_append(struct buffer_t* self, char c)
     self->base[self->size++] = c;
 }
 
-int buffer_atoi(struct buffer_t* self) { return atoi(self->base, self->size); }
+int buffer_to_integer(struct buffer_t* self)
+{
+    return atoi(self->base, self->size);
+}
+char* buffer_to_string(struct buffer_t* self)
+{
+    return strndup(self->base, self->size);
+}
 
 double buffer_to_double(struct buffer_t* self)
 {
