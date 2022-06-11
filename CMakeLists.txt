@@ -45,3 +45,4 @@ add_compile_definitions(NXS_GIT_HASH=${NXS_GIT_HASH})
 
 
 add_subdirectory(src)
+add_subdirectory(apps)
